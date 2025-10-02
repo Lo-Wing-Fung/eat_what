@@ -144,7 +144,7 @@
     let keepGoing = true;
     while(keepGoing){
       keepGoing = await eliminateOnce();
-      if(keepGoing) await wait(100); // adjust speed here
+      if(keepGoing) await wait(5); // adjust speed here
     }
 
     randomBtn.textContent = "🎉";
