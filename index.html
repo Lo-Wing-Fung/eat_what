@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>今日吃啥 (科學園)</title>
+  <style>
+    body{margin:0;font-family:sans-serif;background:#fafafa;color:#111}
+    header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#fff;position:sticky;top:0;z-index:10;border-bottom:1px solid #ddd}
+    h1{margin:0;font-size:18px}
+    .actions{display:flex;gap:8px}
+    button{border:none;background:#fff;border-radius:50%;width:40px;height:40px;box-shadow:0 1px 3px rgba(0,0,0,.1);cursor:pointer}
+    main{padding:12px;display:grid;gap:12px}
+    .card{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:.4s}
+    .card.gone{display:none}
+    .title{font-weight:bold;margin-bottom:4px}
+    .meta{font-size:13px;color:#555}
+    @keyframes swipeLeft{to{transform:translateX(-120%) rotate(-4deg);opacity:0}}
+    @keyframes swipeRight{to{transform:translateX(120%) rotate(4deg);opacity:0}}
+    .swipe-left{animation:swipeLeft .4s ease forwards}
+    .swipe-right{animation:swipeRight .4s ease forwards}
+    .winner{outline:2px solid #10b981;box-shadow:0 0 0 4px rgba(16,185,129,.2)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>今日吃啥</h1>
+    <div class="actions">
+      <button id="resetBtn">↻</button>
+      <button id="randomBtn">🎲</button>
+    </div>
+  </header>
+  <main id="list"></main>
+
+  <script>
+  const data = [
+    {name:"華御結 (香港科學園)", location:"白石角香港科學園第一期科技大道東1號核心大樓2座地下S012號舖"},
+    {name:"樂膳餐室", location:"白石角科技大道東1號香港科學園1E座地下S003D號舖"},
+    {name:"Harbourview Grill (香港科學園)", location:"白石角香港科學園科技大道東12號12E大樓二座地下S081號舖"},
+    {name:"東京チカラめし", location:"白石角香港科學園科技大道東12號12E大樓二座地下S085-S086號舖"},
+    {name:"譚仔雲南米線 (香港科學園)", location:"白石角科技大道西1號香港科學園第一期1W大樓地下S013A號舖"},
+    {name:"泰潮", location:"白石角香港科學園一期科技大道西5號企業廣場地下S015-S016號舖"},
+    {name:"Tom Bar & Grill", location:"白石角香港科學園科技大道東16E號海濱大樓二座地下S088-S089號舖"},
+    {name:"PRET A MANGER (企業廣場)", location:"白石角香港科學園第一期科技大道西5號企業廣場地下S018號舖"},
+    {name:"CHIMAC (香港科學園)", location:"科技大道西5號白石角香港科學園一期企業廣場地下S017號舖"},
+    {name:"囍慶酒家", location:"白石角香港科學園1期科技大道西1號核心大樓2座2樓S101-S106號舖"},
+    {name:"楠天Kitchen", location:"白石角香港科學園1期科技大道西1號核心大樓2座地下S002號舖"},
+    {name:"大快活 (香港科學園)", location:"白石角香港科學園科技大道西1號1W大樓地下S013B號舖"},
+    {name:"海雲薈", location:"白石角香港科學園1期科技大道西1號核心大樓2座1樓101號舖"},
+    {name:"HFT Life", location:"沙田白石角香港科學園一期科技大道西1號地下S010號舖"},
+    {name:"八方棧", location:"白石角香港科學園科技大道東16號16E大樓地下S087號舖"},
+    {name:"越", location:"白石角香港科學園科技大道東16E號海濱大樓二座地下S090-091號舖"},
+    {name:"星巴克咖啡", location:"科技大道西8號香港科學園1號核心大樓1座地下S001B號舖"},
+    {name:"PizzaExpress (香港科學園)", location:"白石角香港科學園第二期科技大道東12號海濱大樓1座地下S082-S083號舖"},
+    {name:"遇見小麵 (香港科學園8W大樓)", location:"白石角科技大道西8號香港科學園8W大樓地下S035號舖"},
+    {name:"Food Lab (香港科學園)", location:"白石角香港科學園第二期科技大道西8號8W大樓地下S031號舖"},
+    {name:"SUBWAY", location:"白石角香港科學園第二期科技大道西8號尚湖樓1樓S131號舖"},
+    {name:"吃茶三千 (香港科學園第二期)", location:"白石角香港科學園第二期科技大道西8號8W大樓地下S033A號舖"},
+    {name:"Ruby Tuesday (香港科學園)", location:"白石角香港科學園第二期科技大道西8號尚湖樓8W地下S033號舖"},
+    {name:"蘇哥清湯腩", location:"白石角香港科學園第二期科技大道西8號尚湖樓8W地下S036號舖"},
+    {name:"麥當勞 (香港科學園)", location:"白石角科技大道西8號香港科學園8W大樓地下S037-S039號舖"},
+    {name:"必勝客 (香港科學園8W大樓)", location:"白石角科技大道西8號香港科學園第二期8W大樓地下S031A號舖"},
+    {name:"NUK Café", location:"科學園科技大道西10號地下S045號舖"},
+    {name:"森林麵包", location:"白石角科技大道西10號香港科學園10W大樓地下S046C號舖"},
+    {name:"Snapick", location:"科技大道西12號12W大樓1樓V003號舖"},
+    {name:"十和田壽司 (香港科學園)", location:"白石角香港科學園第三期科技大道西5號企業廣場地下S067-S069號舖"},
+    {name:"SMACK", location:"白石角香港科學園科技大道西12號12W大樓1樓S161號舖"},
+    {name:"Wake Up", location:"白石角香港科學園2期科技大道西10號10W地下S041B號舖"},
+    {name:"和田便當", location:"白石角香港科學園第二期科技大道西8號尚湖樓8W大堂"},
+    {name:"Parc88", location:"白石角香港科學園第二期科技大道西10號浚湖樓地下S040A號舖"},
+    {name:"農", location:"白石角香港科學園第二期科技大道西10號浚湖樓地下S041A號舖"},
+    {name:"仙葉", location:"白石角香港科學園科技大道西17號17W大樓1樓102號舖"},
+    {name:"薈聚軒", location:"白石角香港科學園科技大道西19號19W大樓1樓106-107號舖"},
+    {name:"sensory ZERO ROASTERLAB (香港科學園)", location:"白石角香港科學園科技大道西17號17W大樓地下G01號舖"},
+    {name:"愛.味道", location:"白石角香港科學園科技大道東1號1E大樓地下S003C號舖"},
+    {name:"武吉士 (17W大樓)", location:"白石角香港科學園科技大道西17號17W大樓地舖"},
+    {name:"Ebeneezer's Kebabs & Pizzeria (香港科學園)", location:"白石角香港科學園科技大道西17號17W大樓地下R7_G02A號舖"},
+    {name:"Kodette", location:"白石角香港科學園科技大道西17號17W大樓1樓RT103號舖"},
+    {name:"Deli O", location:"白石角香港科學園科技大道西17號17W大樓地下RTG02號舖"},
+    {name:"美心MX (香港科學園)", location:"白石角香港科學園科技大道西17號17W大樓地下RTG02B號舖"},
+    {name:"グルメ三木屋", location:"白石角香港科學園科技大道西17號17W大樓1樓101號舖"},
+    {name:"梨滿園韓國料理", location:"白石角科技大道西17號香港科學園17W大樓1樓RT105號舖"},
+    {name:"盛宴", location:"科技大道西19號白石角香港科學園地下S061-S066號舖"},
+    {name:"和田便當", location:"香港科學園第二期科技大道西19號19W大堂"},
+    {name:"Hunky Dory", location:"白石角香港科學園科技大道西19號19W大樓2樓245號舖"}
+  ];
+
+  const list = document.getElementById("list");
+  const randomBtn = document.getElementById("randomBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  // ---- render ----
+  function render(){
+    list.innerHTML = data.map(d=>`
+      <div class="card">
+        <div class="title">${d.name}</div>
+        <div class="meta">${d.location}</div>
+      </div>
+    `).join("");
+    randomBtn.disabled = false;
+    randomBtn.textContent = "🎲";
+  }
+  render();
+
+  // ---- helpers ----
+  const aliveCards = () =>
+    Array.from(document.querySelectorAll(".card")).filter(c=>!c.classList.contains("gone"));
+
+  function eliminateOnce(){
+    return new Promise(resolve=>{
+      const cards = aliveCards();
+      if(cards.length <= 1){ resolve(false); return; }
+
+      const pick = cards[Math.floor(Math.random()*cards.length)];
+      const dir = Math.random()<0.5 ? "swipe-left" : "swipe-right";
+      pick.classList.add(dir);
+
+      pick.addEventListener("animationend", () => {
+        pick.classList.remove(dir);
+        pick.classList.add("gone");
+        const remain = aliveCards();
+        if(remain.length === 1){
+          remain[0].classList.add("winner");
+          resolve(false); // stop loop
+        }else{
+          resolve(true);  // continue loop
+        }
+      }, {once:true});
+    });
+  }
+
+  // ---- tournament loop ----
+  let running = false;
+
+  async function runTournament(){
+    if(running) return;
+    running = true;
+    randomBtn.disabled = true;
+    randomBtn.textContent = "…"; // small busy hint
+
+    // small pacing delay so each swipe is visible
+    const wait = ms => new Promise(r=>setTimeout(r, ms));
+
+    let keepGoing = true;
+    while(keepGoing){
+      keepGoing = await eliminateOnce();
+      if(keepGoing) await wait(100); // adjust speed here
+    }
+
+    randomBtn.textContent = "🎉";
+    running = false;
+  }
+
+  // ---- events ----
+  randomBtn.onclick = runTournament;
+  resetBtn.onclick = () => { list.querySelectorAll(".winner").forEach(w=>w.classList.remove("winner")); render(); };
+</script>
+
+
+
+</body>
+</html>
